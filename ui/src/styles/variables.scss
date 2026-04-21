@@ -1,23 +1,23 @@
 :root {
   --app-base-px: 8px;
-  --app-layout-bg-color: #f5f6f7;
-  --app-text-color-secondary: #646a73;
-  --app-text-color-disable: #bbbfc4;
-  --app-input-color-placeholder: #8f959e;
+  --app-layout-bg-color: #fff5f0;
+  --app-text-color-secondary: #8b7355;
+  --app-text-color-disable: #d4c4b5;
+  --app-input-color-placeholder: #bfa893;
   --app-view-padding: 24px;
   --app-view-bg-color: #ffffff;
-  --app-border-color-dark: #bbbfc4;
+  --app-border-color-dark: #e0d0c0;
   --app-border-radius-small: 6px;
-  --app-border-radius-base: 8px;
-  --app-border-radius-large: 16px;
-  --md-bk-hover-color: var(--el-border-color-hover);
+  --app-border-radius-base: 12px;
+  --app-border-radius-large: 20px;
+  --md-bk-hover-color: #fff5ef;
   /** header 组件 */
   --app-header-height: 56px;
   --app-header-padding: 0 20px;
 
-  --app-header-bg-color: linear-gradient(90deg, #ebf1ff 24.34%, #e5fbf8 56.18%, #f2ebfe 90.18%);
-  --app-logo-color: linear-gradient(180deg, #3370ff 0%, #7f3bf5 100%);
-  --app-avatar-gradient-color: linear-gradient(270deg, #9258f7 0%, #3370ff 100%);
+  --app-header-bg-color: linear-gradient(90deg, #fff5f0 24.34%, #ffe8d6 56.18%, #ffd4b8 90.18%);
+  --app-logo-color: linear-gradient(180deg, #ff6b35 0%, #f4a261 100%);
+  --app-avatar-gradient-color: linear-gradient(270deg, #e76f51 0%, #ff6b35 100%);
 
   /* 计算高度 */
   --app-main-height: calc(100vh - var(--app-header-height) - var(--app-view-padding) * 2 - 40px);
@@ -25,13 +25,13 @@
   /** sidebar 组件 */
   --sidebar-width: 240px;
   /** tag */
-  --tag-default-bg: rgba(51, 112, 255, 0.2);
-  --tag-default-color: #2b5fd9;
+  --tag-default-bg: rgba(255, 107, 53, 0.15);
+  --tag-default-color: #e7602e;
   --tag-success-bg: rgba(52, 199, 36, 0.2);
   --tag-success-color: #2ca91f;
-  --tag-warning-bg: rgba(255, 136, 0, 0.2);
+  --tag-warning-bg: rgba(244, 162, 97, 0.2);
   --tag-warning-color: #d97400;
-  --tag-danger-bg: rgba(245, 74, 69, 0.2);
+  --tag-danger-bg: rgba(231, 111, 81, 0.2);
 
   /** card */
   --card-width: 330px;
@@ -40,8 +40,14 @@
 
   /** ai-chat */
   --dialog-bg-gradient-color:
-    linear-gradient(188deg, rgba(235, 241, 255, 0.2) 39.6%, rgba(231, 249, 255, 0.2) 94.3%), #eff0f1;
+    linear-gradient(188deg, rgba(255, 245, 240, 0.2) 39.6%, rgba(255, 232, 214, 0.2) 94.3%), #fff9f5;
 
   /** 资源授权 */
   --setting-left-width: 280px;
+
+  /** 暖色调主色 */
+  --app-primary-color: #ff6b35;
+  --app-primary-light: #ffb99a;
+  --app-primary-dark: #e7602e;
+  --app-primary-bg: rgba(255, 107, 53, 0.08);
 }
