@@ -1,7 +1,7 @@
 <template>
   <login-layout v-if="!loading" v-loading="loading">
     <LoginContainer :subTitle="newDefaultSlogan">
-      <h2 class="mb-24" v-if="!showQrCodeTab">{{ loginMode || $t('views.login.title') }}</h2>
+      <h2 class="mb-24" v-if="!showQrCodeTab">{{ loginMode || '蓝星晴RAG' }}</h2>
       <div v-if="!showQrCodeTab">
         <el-form
           class="login-form"
