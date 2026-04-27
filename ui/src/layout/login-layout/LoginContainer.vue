@@ -7,7 +7,7 @@
             <span class="logo-text">R</span>
           </div>
         </div>
-        <h2 class="login-title">{{ loginTitle }}</h2>
+        <h2 class="login-title" v-if="loginTitle">{{ loginTitle }}</h2>
         <p class="login-subtitle" v-if="subTitle">{{ subTitle }}</p>
       </div>
       <div class="login-card-body">
@@ -25,7 +25,7 @@ const props = defineProps({
 })
 
 const loginTitle = computed(() => {
-  return props.title || '蓝星晴RAG'
+  return props.title || undefined
 })
 </script>
 <style lang="scss" scoped>
