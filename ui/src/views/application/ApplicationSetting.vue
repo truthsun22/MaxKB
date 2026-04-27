@@ -50,13 +50,34 @@
                       <span>{{ $t('common.name') }} <span class="color-danger">*</span></span>
                     </div>
                   </template>
-                  <el-input
-                    v-model="applicationForm.name"
-                    maxlength="64"
-                    :placeholder="$t('views.application.form.appName.placeholder')"
-                    show-word-limit
-                    @blur="applicationForm.name = applicationForm.name?.trim()"
-                  />
+                  <div class="flex w-full">
+                    <div
+                      class="edit-avatar mr-12"
+                      @mouseenter="showEditIcon = true"
+                      @mouseleave="showEditIcon = false"
+                    >
+                      <el-avatar shape="square" :size="32" style="background: none">
+                        <img :src="resetUrl(applicationForm.icon, resetUrl('./favicon.ico'))" alt="" />
+                      </el-avatar>
+                      <el-avatar
+                        v-if="showEditIcon"
+                        shape="square"
+                        class="edit-mask"
+                        :size="32"
+                        @click="openEditAvatar"
+                      >
+                        <AppIcon iconName="app-edit"></AppIcon>
+                      </el-avatar>
+                    </div>
+                    <el-input
+                      v-model="applicationForm.name"
+                      maxlength="64"
+                      :placeholder="$t('views.application.form.appName.placeholder')"
+                      show-word-limit
+                      @blur="applicationForm.name = applicationForm.name?.trim()"
+                      class="flex-1"
+                    />
+                  </div>
                 </el-form-item>
                 <el-form-item :label="$t('common.desc')">
                   <el-input
@@ -861,6 +882,7 @@
     <ToolDialog ref="toolDialogRef" @refresh="submitToolDialog" tool_type="CUSTOM,WORKFLOW" />
     <ToolDialog ref="skillToolDialogRef" @refresh="submitSkillToolDialog" tool_type="SKILL" />
     <ApplicationDialog ref="applicationDialogRef" @refresh="submitApplicationDialog" />
+    <EditAvatarDialog ref="EditAvatarDialogRef" @refresh="refreshIcon" targetType="application" />
   </div>
 </template>
 <script setup lang="ts">
@@ -887,6 +909,7 @@ import { resetUrl } from '@/utils/common'
 import McpServersDialog from '@/views/application/component/McpServersDialog.vue'
 import ToolDialog from '@/views/application/component/ToolDialog.vue'
 import ApplicationDialog from '@/views/application/component/ApplicationDialog.vue'
+import EditAvatarDialog from '@/views/tool/component/EditAvatarDialog.vue'
 import useStore from '@/stores'
 const route = useRoute()
 const router = useRouter()
@@ -935,6 +958,8 @@ const TTSModeParamSettingDialogRef = ref<InstanceType<typeof TTSModeParamSetting
 const STTModeParamSettingDialogRef = ref<InstanceType<typeof STTModeParamSettingDialog>>()
 const ParamSettingDialogRef = ref<InstanceType<typeof ParamSettingDialog>>()
 const GeneratePromptDialogRef = ref<InstanceType<typeof GeneratePromptDialog>>()
+const EditAvatarDialogRef = ref()
+const showEditIcon = ref(false)
 
 const applicationFormRef = ref<FormInstance>()
 const AddKnowledgeDialogRef = ref()
@@ -1272,6 +1297,17 @@ function refreshTTSForm(data: any) {
 
 function refreshSTTForm(data: any) {
   applicationForm.value.stt_model_params_setting = data
+}
+
+function refreshIcon(data: any) {
+  applicationForm.value.icon = data
+}
+
+function openEditAvatar() {
+  EditAvatarDialogRef.value.open({
+    id: id,
+    icon: applicationForm.value.icon
+  })
 }
 
 function removeKnowledge(id: any) {

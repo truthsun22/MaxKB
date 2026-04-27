@@ -19,7 +19,7 @@ from application.api.application_api import ApplicationCreateAPI, ApplicationQue
     ApplicationBatchOperateAPI
 from application.models import Application
 from application.serializers.application import ApplicationSerializer, Query, ApplicationOperateSerializer, \
-    ApplicationBatchOperateSerializer
+    ApplicationBatchOperateSerializer, ApplicationIconOperateSerializer
 from common import result
 from common.auth import TokenAuth
 from common.auth.authentication import has_permissions, get_is_permissions, check_batch_permissions
@@ -490,3 +490,32 @@ class PlayDemoText(APIView):
                   'user_id': request.user.id}).play_demo_text(request.data)
         return HttpResponse(byte_data, status=200, headers={'Content-Type': 'audio/mp3',
                                                             'Content-Disposition': 'attachment; filename="abc.mp3"'})
+
+
+class EditIcon(APIView):
+    authentication_classes = [TokenAuth]
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(
+        methods=['PUT'],
+        description=_("Edit application icon"),
+        summary=_("Edit application icon"),
+        operation_id=_("Edit application icon"),
+        parameters=ApplicationOperateAPI.get_parameters(),
+        tags=[_('Application')]
+    )
+    @has_permissions(PermissionConstants.APPLICATION_EDIT.get_workspace_application_permission(),
+                     PermissionConstants.APPLICATION_EDIT.get_workspace_permission_workspace_manage_role(),
+                     ViewPermission([RoleConstants.USER.get_workspace_role()],
+                                    [PermissionConstants.APPLICATION.get_workspace_application_permission()],
+                                    CompareConstants.AND),
+                     RoleConstants.WORKSPACE_MANAGE.get_workspace_role())
+    @log(menu='Application', operate="Edit application icon",
+         get_operation_object=lambda r, k: get_application_operation_object(k.get('application_id')))
+    def put(self, request: Request, workspace_id: str, application_id: str):
+        return result.success(ApplicationIconOperateSerializer(data={
+            'id': application_id,
+            'workspace_id': workspace_id,
+            'user_id': request.user.id,
+            'image': request.FILES.get('file')
+        }).edit(request.data))

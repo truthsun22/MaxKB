@@ -9,7 +9,10 @@
     <el-radio-group v-model="radioType" class="radio-block mb-16">
       <el-radio value="default">
         <p>{{ $t('common.EditAvatarDialog.default') }}</p>
-        <ToolIcon :size="32" :type="iconType" />
+        <ToolIcon v-if="targetType === 'tool'" :size="32" :type="iconType" />
+        <el-avatar v-else shape="square" :size="32" style="background: none">
+          <img :src="defaultApplicationIcon" alt="" />
+        </el-avatar>
       </el-radio>
 
       <el-radio value="custom">
@@ -56,16 +59,19 @@
 import { computed, ref, watch } from 'vue'
 import { cloneDeep } from 'lodash'
 import { MsgError, MsgSuccess } from '@/utils/message'
-import { isAppIcon } from '@/utils/common'
+import { resetUrl } from '@/utils/common'
 import { t } from '@/locales'
 import { loadSharedApi } from '@/utils/dynamics-api/shared-api.ts'
 import { useRoute } from 'vue-router'
 
 const props = defineProps<{
   iconType?: string
+  targetType?: 'tool' | 'application'
 }>()
 const emit = defineEmits(['refresh'])
 const route = useRoute()
+
+const defaultApplicationIcon = computed(() => resetUrl('./favicon.ico'))
 
 const iconFile = ref<any>(null)
 const fileURL = ref<any>(null)
@@ -84,9 +90,6 @@ const apiType = computed(() => {
     return 'workspace'
   }
 })
-const isShared = computed(() => {
-  return route.path.includes('shared')
-})
 
 watch(dialogVisible, (bool) => {
   if (!bool) {
@@ -95,15 +98,26 @@ watch(dialogVisible, (bool) => {
   }
 })
 
+const isDefaultIcon = (icon: string | undefined) => {
+  if (props.targetType === 'application') {
+    return !icon || icon === '' || icon === './favicon.ico' || !icon.startsWith('./oss/file/')
+  }
+  return !icon || icon === ''
+}
+
 const open = (data: any) => {
-  radioType.value = isAppIcon(data.icon) ? 'custom' : 'default'
-  fileURL.value = isAppIcon(data.icon) ? data.icon : null
+  if (isDefaultIcon(data.icon)) {
+    radioType.value = 'default'
+    fileURL.value = null
+  } else {
+    radioType.value = 'custom'
+    fileURL.value = resetUrl(data.icon)
+  }
   detail.value = cloneDeep(data)
   dialogVisible.value = true
 }
 
 const onChange = (file: any) => {
-  //1、判断文件大小是否合法，文件限制不能大于10MB
   const isLimit = file?.size / 1024 / 1024 < 10
   if (!isLimit) {
     MsgError(t('common.EditAvatarDialog.fileSizeExceeded'))
@@ -116,17 +130,30 @@ const onChange = (file: any) => {
 
 function submit() {
   if (radioType.value === 'default') {
-    emit('refresh', '')
+    if (props.targetType === 'application') {
+      emit('refresh', './favicon.ico')
+    } else {
+      emit('refresh', '')
+    }
     dialogVisible.value = false
   } else if (radioType.value === 'custom' && iconFile.value) {
     const fd = new FormData()
     fd.append('file', iconFile.value.raw)
-    loadSharedApi({ type: 'tool', systemType: apiType.value })
-      .putToolIcon(detail.value.id, fd, loading)
-      .then((res: any) => {
-        emit('refresh', res.data)
-        dialogVisible.value = false
-      })
+    if (props.targetType === 'application') {
+      loadSharedApi({ type: 'application', systemType: apiType.value })
+        .putApplicationIcon(detail.value.id, fd, loading)
+        .then((res: any) => {
+          emit('refresh', res.data)
+          dialogVisible.value = false
+        })
+    } else {
+      loadSharedApi({ type: 'tool', systemType: apiType.value })
+        .putToolIcon(detail.value.id, fd, loading)
+        .then((res: any) => {
+          emit('refresh', res.data)
+          dialogVisible.value = false
+        })
+    }
   } else {
     MsgError(t('common.EditAvatarDialog.uploadImagePrompt'))
   }

@@ -40,7 +40,7 @@ from common.cache_data.application_access_token_cache import del_application_acc
 from common.database_model_manage.database_model_manage import DatabaseModelManage
 from common.db.search import native_search, native_page_search
 from common.exception.app_exception import AppApiException
-from common.field.common import UploadedFileField
+from common.field.common import UploadedFileField, UploadedImageField
 from common.utils.common import get_file_content, restricted_loads, generate_uuid, _remove_empty_lines, \
     bytes_to_uploaded_file
 from common.utils.logger import maxkb_logger
@@ -1398,3 +1398,48 @@ class ApplicationBatchOperateSerializer(serializers.Serializer):
 
         QuerySet(Application).filter(id__in=id_list, workspace_id=workspace_id).update(folder_id=folder_id)
         return True
+
+
+class ApplicationIconOperateSerializer(serializers.Serializer):
+    id = serializers.UUIDField(required=True, label=_("Application ID"))
+    workspace_id = serializers.CharField(required=True, label=_("workspace id"))
+    user_id = serializers.UUIDField(required=True, label=_("User ID"))
+    image = UploadedImageField(required=True, label=_("picture"))
+
+    def is_valid(self, *, raise_exception=False):
+        super().is_valid(raise_exception=True)
+        workspace_id = self.data.get('workspace_id')
+        query_set = QuerySet(Application).filter(id=self.data.get('id'))
+        if workspace_id:
+            query_set = query_set.filter(workspace_id=workspace_id)
+        if not query_set.exists():
+            raise AppApiException(500, _('Application id does not exist'))
+
+    def edit(self, with_valid=True):
+        if with_valid:
+            self.is_valid(raise_exception=True)
+        application = QuerySet(Application).filter(id=self.data.get('id')).first()
+        if application is None:
+            raise AppApiException(500, _('Application does not exist'))
+        if application.icon and application.icon.startswith('./oss/file/'):
+            QuerySet(File).filter(id=application.icon.split('/')[-1]).delete()
+        if self.data.get('image') is None:
+            application.icon = './favicon.ico'
+        else:
+            meta = {
+                'debug': False
+            }
+            file_id = uuid.uuid7()
+            file = File(
+                id=file_id,
+                file_name=self.data.get('image').name,
+                source_type=FileSourceType.APPLICATION,
+                source_id=application.id,
+                meta=meta
+            )
+            file.save(self.data.get('image').read())
+
+            application.icon = f'./oss/file/{file_id}'
+        application.save()
+
+        return application.icon
