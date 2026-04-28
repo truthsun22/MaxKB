@@ -5,9 +5,9 @@ import getpass
 import gzip
 import json
 import os
-import pwd
+# import pwd
 import random
-import resource
+# import resource
 import socket
 import subprocess
 import sys
@@ -25,12 +25,31 @@ from maxkb.const import BASE_DIR, CONFIG
 from maxkb.const import PROJECT_DIR
 
 _enable_sandbox = bool(int(CONFIG.get('SANDBOX', 0)))
+import platform
+
+# 仅在非 Windows 系统上导入 resource 模块
+if platform.system() != 'Windows':
+    import resource
+else:
+    resource = None
+
+_enable_sandbox = bool(CONFIG.get('SANDBOX', 0))
 _run_user = 'sandbox' if _enable_sandbox else getpass.getuser()
 _sandbox_path = CONFIG.get("SANDBOX_HOME", '/opt/maxkb-app/sandbox') if _enable_sandbox else os.path.join(PROJECT_DIR, 'data', 'sandbox')
 _sandbox_python_sys_path = CONFIG.get_sandbox_python_package_paths().split(',')
 _process_limit_timeout_seconds = int(CONFIG.get("SANDBOX_PYTHON_PROCESS_LIMIT_TIMEOUT_SECONDS", '3600'))
 _process_limit_cpu_cores = min(max(int(CONFIG.get("SANDBOX_PYTHON_PROCESS_LIMIT_CPU_CORES", '1')), 1), len(os.sched_getaffinity(0))) if sys.platform.startswith("linux") else os.cpu_count()  # 只支持linux，window和mac不支持
 _process_limit_mem_mb = int(CONFIG.get("SANDBOX_PYTHON_PROCESS_LIMIT_MEM_MB", '256'))
+
+def _get_user_info():
+    """获取用户信息的跨平台兼容函数"""
+    if sys.platform.startswith('win'):
+        return None
+    try:
+        import pwd
+        return pwd.getpwnam(_run_user)
+    except (ImportError, KeyError):
+        return None
 
 class ToolExecutor:
 
@@ -86,10 +105,17 @@ class ToolExecutor:
     except Exception as e:
         maxkb_logger.error(f'Exception: {e}', exc_info=True)
 
+    # def exec_code(self, code_str, keywords, function_name=None):
+    #     _id = str(uuid.uuid7())
+    #     action_function = f'({function_name !a}, locals_v.get({function_name !a}))' if function_name else 'locals_v.popitem()'
+    #     set_run_user = f'os.setgid({pwd.getpwnam(_run_user).pw_gid});os.setuid({pwd.getpwnam(_run_user).pw_uid});' if _enable_sandbox else ''
+    #     _exec_code = f"""
+
     def exec_code(self, code_str, keywords, function_name=None):
         _id = str(uuid.uuid7())
         action_function = f'({function_name !a}, locals_v.get({function_name !a}))' if function_name else 'locals_v.popitem()'
-        set_run_user = f'os.setgid({pwd.getpwnam(_run_user).pw_gid});os.setuid({pwd.getpwnam(_run_user).pw_uid});' if _enable_sandbox else ''
+        user_info = _get_user_info()
+        set_run_user = f'os.setgid({user_info.pw_gid});os.setuid({user_info.pw_uid});' if _enable_sandbox and user_info else ''
         _exec_code = f"""
 try:
     import os, sys, json
@@ -263,9 +289,15 @@ sys.stdout.flush()
         code_parts.append("\nmcp.run(transport=\"stdio\")\n")
         return "\n".join(code_parts)
 
+    # def generate_mcp_server_code(self, code_str, params, name, description, tool_id):
+    #     code = self._generate_mcp_server_code(code_str, params, name, description, tool_id)
+    #     set_run_user = f'os.setgid({pwd.getpwnam(_run_user).pw_gid});os.setuid({pwd.getpwnam(_run_user).pw_uid});' if _enable_sandbox else ''
+    #     return f"""
+
     def generate_mcp_server_code(self, code_str, params, name, description, tool_id):
         code = self._generate_mcp_server_code(code_str, params, name, description, tool_id)
-        set_run_user = f'os.setgid({pwd.getpwnam(_run_user).pw_gid});os.setuid({pwd.getpwnam(_run_user).pw_uid});' if _enable_sandbox else ''
+        user_info = _get_user_info()
+        set_run_user = f'os.setgid({user_info.pw_gid});os.setuid({user_info.pw_uid});' if _enable_sandbox and user_info else ''
         return f"""
 import os, sys, logging
 logging.basicConfig(level=logging.WARNING)

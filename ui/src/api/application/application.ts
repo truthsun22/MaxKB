@@ -166,6 +166,21 @@ const putXpackAccessToken: (
 }
 
 /**
+ * 修改应用图标
+ * @param application_id
+ * @param data
+ * @param loading
+ * @returns
+ */
+const putApplicationIcon: (
+  application_id: string,
+  data: any,
+  loading?: Ref<boolean>,
+) => Promise<Result<any>> = (application_id, data, loading) => {
+  return put(`${prefix.value}/${application_id}/edit_icon`, data, undefined, loading)
+}
+
+/**
  * 导出应用
  */
 
@@ -462,6 +477,7 @@ export default {
   getAccessToken,
   putAccessToken,
   putXpackAccessToken,
+  putApplicationIcon,
   exportApplication,
   importApplication,
   getStatistics,
